@@ -29,7 +29,7 @@ async fn upload_coverage_data(data: &CoverageData) -> Result<(), Box<dyn std::er
         .await?;
 
     let response_json: Value = response.json().await?;
-    println!("{:#?}", response_json);
+    log("info", &format!("Upload successful!"));
 
     Ok(())
 }
