@@ -1,3 +1,8 @@
+// mod merge;
+
+// use merge::coverage_merge::{merge_coverage_map, FileCoverage};
+
+
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use serde_json::{Value};
@@ -7,6 +12,8 @@ use tokio;
 use std::path::Path;
 use std::time::{SystemTime, UNIX_EPOCH};
 use chrono;
+use uploader::merge::{merge_coverage_map};
+
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 struct CoverageData {
@@ -34,17 +41,18 @@ async fn upload_coverage_data(data: &CoverageData) -> Result<(), Box<dyn std::er
     Ok(())
 }
 
-fn merge_coverage_map(first: &Value, second: &Value) -> Value {
-    let mut first_map = first.as_object().unwrap().clone();
-    let second_map = second.as_object().unwrap();
-
-    for (k, v) in second_map.iter() {
-        first_map.insert(k.clone(), v.clone());
-    }
-
-    Value::Object(first_map)
-}
-
+// fn merge_coverage_map(first: &Value, second: &Value) -> Value {
+//     let mut first_map = first.as_object().unwrap().clone();
+//     let second_map = second.as_object().unwrap();
+//
+//     for (k, v) in second_map.iter() {
+//         first_map.insert(k.clone(), v.clone());
+//     }
+//
+//     Value::Object(first_map)
+// }
+// merge_coverage_map()
+// merge
 pub fn generate_header(version: &str) -> String {
     format!(
         r#"
@@ -95,7 +103,7 @@ async fn main() {
     if json_files.is_empty() {
         log("info", &format!("No coverage files found in .canyon_output"));
     }
-
+    // merge.
     for path in json_files {
         let json_data = fs::read_to_string(&path).unwrap();
         let data: Result<CoverageData, _> = serde_json::from_str(&json_data);
