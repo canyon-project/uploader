@@ -1,14 +1,17 @@
 use serde_json::{Value, Map, Number};
 
-#[derive(Clone, Debug)]
-pub struct FileCoverage {
-    pub s: Map<String, Value>,
-    pub f: Map<String, Value>,
-    pub b: Map<String, Value>,
-}
-
 pub fn merge_file_coverage(first: &Value, second: &Value) -> Value {
-    let mut ret = first.clone();
+
+
+    // TODO 不知道有没有好点的写法
+    // 这些是原本就有的，肯定是相同的，还缺一个“all”字段
+    let first_branch_map = first.get("branchMap").unwrap().as_object().unwrap().clone();
+    let first_fn_map = first.get("fnMap").unwrap().as_object().unwrap().clone();
+    let first_statement_map = first.get("statementMap").unwrap().as_object().unwrap().clone();
+    let first_path = first.get("path").unwrap().as_str().unwrap().clone();
+    let first_hash = first.get("hash").unwrap().as_str().unwrap().clone();
+    let first_coverage_schema = first.get("_coverageSchema").unwrap().as_str().unwrap().clone();
+    // 这些是原本就有的，肯定是相同的
 
     let first_s = first.get("s").unwrap().as_object().unwrap().clone();
     let second_s = second.get("s").unwrap().as_object().unwrap();
@@ -43,6 +46,12 @@ pub fn merge_file_coverage(first: &Value, second: &Value) -> Value {
     result.insert("s".to_string(), Value::Object(merged_s));
     result.insert("f".to_string(), Value::Object(merged_f));
     result.insert("b".to_string(), Value::Object(merged_b));
+    result.insert("branchMap".to_string(), Value::Object(first_branch_map));
+    result.insert("fnMap".to_string(), Value::Object(first_fn_map));
+    result.insert("statementMap".to_string(), Value::Object(first_statement_map));
+    result.insert("_coverageSchema".to_string(), Value::String(first_coverage_schema.parse().unwrap()));
+    result.insert("path".to_string(), Value::String(first_path.parse().unwrap()));
+    result.insert("hash".to_string(), Value::String(first_hash.parse().unwrap()));
     Value::Object(result)
 }
 

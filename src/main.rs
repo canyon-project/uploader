@@ -1,8 +1,3 @@
-// mod merge;
-
-// use merge::coverage_merge::{merge_coverage_map, FileCoverage};
-
-
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use serde_json::{Value};
@@ -10,7 +5,7 @@ use std::collections::HashMap;
 use std::fs;
 use tokio;
 use std::path::Path;
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::time::{SystemTime};
 use chrono;
 use uploader::merge::{merge_coverage_map};
 
@@ -34,25 +29,11 @@ async fn upload_coverage_data(data: &CoverageData) -> Result<(), Box<dyn std::er
         .header("Content-Type", "application/json")
         .send()
         .await?;
-
     let response_json: Value = response.json().await?;
-    log("info", &format!("Upload successful!"));
-
+    log("info", &"Upload successful!".to_string());
     Ok(())
 }
 
-// fn merge_coverage_map(first: &Value, second: &Value) -> Value {
-//     let mut first_map = first.as_object().unwrap().clone();
-//     let second_map = second.as_object().unwrap();
-//
-//     for (k, v) in second_map.iter() {
-//         first_map.insert(k.clone(), v.clone());
-//     }
-//
-//     Value::Object(first_map)
-// }
-// merge_coverage_map()
-// merge
 pub fn generate_header(version: &str) -> String {
     format!(
         r#"
@@ -69,7 +50,6 @@ pub fn generate_header(version: &str) -> String {
 
 fn log(level: &str, message: &str) {
     let start = SystemTime::now();
-    let since_the_epoch = start.duration_since(UNIX_EPOCH).expect("Time went backwards");
     let datetime: chrono::DateTime<chrono::Utc> = start.into();
     let timestamp = datetime.to_rfc3339_opts(chrono::SecondsFormat::Millis, true);
     println!("[{}] ['{}'] => {}", timestamp, level, message);
@@ -103,14 +83,13 @@ async fn main() {
     if json_files.is_empty() {
         log("info", &format!("No coverage files found in .canyon_output"));
     }
-    // merge.
     for path in json_files {
         let json_data = fs::read_to_string(&path).unwrap();
         let data: Result<CoverageData, _> = serde_json::from_str(&json_data);
-        // println!("{:?}", data);???
         if let Ok(data) = data {
             if let Some(existing_data) = map.get(&data.projectID) {
                 let merged_coverage = merge_coverage_map(&existing_data.coverage, &data.coverage);
+                println!("{}", merged_coverage);
                 map.insert(
                     data.projectID.clone(),
                     CoverageData {
@@ -123,7 +102,7 @@ async fn main() {
             }
             log("info", &format!("{:?} merge success! projectID is {:?}, sha is {:?}, reportID is {:?}", path ,data.projectID, data.commitSha, data.commitSha));
         } else {
-            log("info", &format!("Invalid JSON format in file: {:?}", path));
+            log("error", &format!("Invalid JSON format in file: {:?}", path));
         }
     }
 
