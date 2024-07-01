@@ -11,6 +11,10 @@ pub fn merge_file_coverage(first: &Value, second: &Value) -> Value {
     let first_path = first.get("path").unwrap().as_str().unwrap().clone();
     let first_hash = first.get("hash").unwrap().as_str().unwrap().clone();
     let first_coverage_schema = first.get("_coverageSchema").unwrap().as_str().unwrap().clone();
+
+    // 处理可能不存在的 inputSourceMap 字段
+    let input_source_map = first.get("inputSourceMap").map_or(Map::new(), |v| v.as_object().unwrap().clone());
+
     // 这些是原本就有的，肯定是相同的
 
     let first_s = first.get("s").unwrap().as_object().unwrap().clone();
@@ -52,6 +56,10 @@ pub fn merge_file_coverage(first: &Value, second: &Value) -> Value {
     result.insert("_coverageSchema".to_string(), Value::String(first_coverage_schema.parse().unwrap()));
     result.insert("path".to_string(), Value::String(first_path.parse().unwrap()));
     result.insert("hash".to_string(), Value::String(first_hash.parse().unwrap()));
+
+    if !input_source_map.is_empty() {
+        result.insert("inputSourceMap".to_string(), Value::Object(input_source_map));
+    }
     Value::Object(result)
 }
 
