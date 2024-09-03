@@ -20,8 +20,8 @@ export async function main(
   let coverageJson = {}
 
   try {
-     canyonJson = JSON.parse(fs.readFileSync('.canyon_output/canyon.json', 'utf8'))
-     coverageJson = JSON.parse(fs.readFileSync('.canyon_output/coverage-final.json', 'utf8'))
+     canyonJson = JSON.parse(fs.readFileSync(process.cwd() + '/canyon.json', 'utf8'))
+     coverageJson = JSON.parse(fs.readFileSync(process.cwd() + '.canyon_output/coverage-final.json', 'utf8'))
   } catch (e) {
     info('-> No canyon.json or coverage.json found')
     return

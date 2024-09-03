@@ -3,7 +3,8 @@ import {
   UploaderEnvs,
 } from '../types'
 import { addProxyIfNeeded } from './proxy'
-import axios from "axios";
+import { request, setGlobalDispatcher, errors, Dispatcher } from 'undici'
+
 
 export async function uploadToCanyonPOST(
   putAndResultUrlPair: any,
@@ -11,11 +12,13 @@ export async function uploadToCanyonPOST(
   envs: UploaderEnvs,
   args: UploaderArgs,
 ){
-  return axios.post(putAndResultUrlPair, canyon,{
-    headers:{
-      Authorization: `Bearer ${canyon.reporter}`
+  return request(putAndResultUrlPair, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${canyon.reporter}`,
+      'User-Agent': 'codecov-uploader/1.0.0',
     },
-    timeout: 10000,
-    proxy: addProxyIfNeeded(envs, args)
-  }).then(({data})=>data)
+    body: JSON.stringify(canyon),
+  })
 }
