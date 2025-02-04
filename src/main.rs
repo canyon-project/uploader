@@ -104,12 +104,12 @@ async fn main() {
 
     match args.command {
         Some(Commands::Version) => {
-            println!("canyon-uploader 版本 1.2.3");
+            println!("canyon-uploader 版本 1.2.5");
         }
         Some(Commands::Map { coverage_dir,dsn,provider }) => {
 
 
-            let version = "1.2.3";
+            let version = "1.2.5";
             let result = generate_header(version);
 
             log("info", &result);
@@ -119,8 +119,17 @@ async fn main() {
             log("info", &format!("Project root located at: {:?}", std::env::current_dir().unwrap()));
 
             // 外部传入path
-            let path = coverage_dir.unwrap_or_else(|| std::env::current_dir().unwrap());
-            let public_dir = path.join(".canyon_output");
+            let path = std::env::current_dir().unwrap();
+
+            // public_dir的名字是.canyon_output或者传入的coverage_dir的名字
+
+            let public_dir = path.join(coverage_dir.unwrap_or_else(|| PathBuf::from(Path::new(".canyon_output"))).to_path_buf());
+
+
+            // 打印public_dir
+
+            log("info", &format!("public_dir is {:?}", public_dir));
+
 
             // 检查目录是否存在
             if !public_dir.exists() {
