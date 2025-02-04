@@ -101,6 +101,8 @@ type CoverageCollection = std::collections::BTreeMap<String, FileCoverage>;
 #[tokio::main]
 async fn main() {
     let args = Cli::parse();
+    
+    let default_report = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InR6aGFuZ21AdHJpcC5jb20iLCJpZCI6Ijg0MTciLCJpYXQiOjE3Mzg0OTgzOTQsImV4cCI6MjA1NDA3NDM5NH0.Er2VNHsTlk4Ta94NHh0c01uTJ5tnujJ4WPFfFgHjHOA";
 
     match args.command {
         Some(Commands::Version) => {
@@ -182,7 +184,7 @@ async fn main() {
                             sha: first_value.sha.clone().or(std::env::var("CI_COMMIT_SHA").ok()).unwrap(),
                             instrumentCwd: first_value.instrumentCwd.clone(),
                             dsn: dsn.clone().or(first_value.dsn.clone()).or(std::env::var("DSN").ok()),
-                            reporter: first_value.reporter.clone().or(std::env::var("REPORTER").ok()).or("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InR6aGFuZ21AdHJpcC5jb20iLCJpZCI6Ijg0MTciLCJpYXQiOjE3Mzg0OTgzOTQsImV4cCI6MjA1NDA3NDM5NH0.Er2VNHsTlk4Ta94NHh0c01uTJ5tnujJ4WPFfFgHjHOA".to_string().parse().ok()),
+                            reporter: first_value.reporter.clone().or(std::env::var("REPORTER").ok()).or(Option::from(defaultde.to_string())),
                             branch: first_value.branch.clone().or(std::env::var("CI_COMMIT_BRANCH").ok()),
                             compareTarget: first_value.compareTarget.clone(),
                             // projectID是拼接一个auto和provider、projectID
@@ -241,10 +243,17 @@ async fn upload_coverage_data(data: &CoverageData) -> Result<(), Box<dyn std::er
     // 把请求体积写到本地
     // fs::write("request_body.json", serde_json::to_string_pretty(data).unwrap()).unwrap();
 
+    // 打印bearer token，把bearer token用空格连起来，token可能是空的
+    let bearer_token = match data.reporter.as_ref() {
+        Some(token) => format!("Bearer {}", token),
+        None => "Bearer ".to_string(),
+    };
+    println!("bearer_token: {:?}", bearer_token);
+
     let response = client
         .post(&data.dsn.clone().unwrap())
         .json(data)
-        .header("Authorization", format!("Bearer {:?}", data.reporter))
+        .header("Authorization", bearer_token)
         .header("Content-Type", "application/json")
         .send()
         .await?;
