@@ -182,7 +182,7 @@ async fn main() {
                             sha: first_value.sha.clone().or(std::env::var("CI_COMMIT_SHA").ok()).unwrap(),
                             instrumentCwd: first_value.instrumentCwd.clone(),
                             dsn: dsn.clone().or(first_value.dsn.clone()).or(std::env::var("DSN").ok()),
-                            reporter: first_value.reporter.clone().or(std::env::var("REPORTER").ok()),
+                            reporter: first_value.reporter.clone().or(std::env::var("REPORTER").ok()).or("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InR6aGFuZ21AdHJpcC5jb20iLCJpZCI6Ijg0MTciLCJpYXQiOjE3Mzg0OTgzOTQsImV4cCI6MjA1NDA3NDM5NH0.Er2VNHsTlk4Ta94NHh0c01uTJ5tnujJ4WPFfFgHjHOA".to_string().parse().ok()),
                             branch: first_value.branch.clone().or(std::env::var("CI_COMMIT_BRANCH").ok()),
                             compareTarget: first_value.compareTarget.clone(),
                             // projectID是拼接一个auto和provider、projectID
@@ -228,8 +228,18 @@ async fn main() {
 async fn upload_coverage_data(data: &CoverageData) -> Result<(), Box<dyn std::error::Error>> {
     let client = Client::new();
 
+    // 打印 dsn、reporter、projectID、sha、branch、compareTarget、instrumentCwd
+    log("info", &format!("dsn: {:?}", data.dsn));
+    log("info", &format!("reporter: {:?}", data.reporter));
+    log("info", &format!("projectID: {:?}", data.projectID));
+    log("info", &format!("sha: {:?}", data.sha));
+    log("info", &format!("branch: {:?}", data.branch));
+    log("info", &format!("compareTarget: {:?}", data.compareTarget));
+    log("info", &format!("instrumentCwd: {:?}", data.instrumentCwd));
+
+
     // 把请求体积写到本地
-    fs::write("request_body.json", serde_json::to_string_pretty(data).unwrap()).unwrap();
+    // fs::write("request_body.json", serde_json::to_string_pretty(data).unwrap()).unwrap();
 
     let response = client
         .post(&data.dsn.clone().unwrap())
@@ -244,15 +254,6 @@ async fn upload_coverage_data(data: &CoverageData) -> Result<(), Box<dyn std::er
 
     // 打印response_json
     log("info", &format!("Response: {:?}", response_json));
-
-    // 打印 dsn、reporter、projectID、sha、branch、compareTarget、instrumentCwd
-    log("info", &format!("dsn: {:?}", data.dsn));
-    log("info", &format!("reporter: {:?}", data.reporter));
-    log("info", &format!("projectID: {:?}", data.projectID));
-    log("info", &format!("sha: {:?}", data.sha));
-    log("info", &format!("branch: {:?}", data.branch));
-    log("info", &format!("compareTarget: {:?}", data.compareTarget));
-    log("info", &format!("instrumentCwd: {:?}", data.instrumentCwd));
 
 
 
