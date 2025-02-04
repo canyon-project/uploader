@@ -230,8 +230,11 @@ async fn upload_coverage_data(data: &CoverageData) -> Result<(), Box<dyn std::er
         .send()
         .await?;
 
-    log("info", &format!("Uploading data: {:?}", data));
-    let response_json: serde_json::Value = response.json().await?;
+    // log("info", &format!("Uploading data: {:?}", data));
+    let response_json: Value = response.json().await?;
+
+    // 打印response_json
+    log("info", &format!("Response: {:?}", response_json));
 
     // 打印 dsn、reporter、projectID、sha、branch、compareTarget、instrumentCwd
     log("info", &format!("dsn: {:?}", data.dsn));
