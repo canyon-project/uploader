@@ -184,7 +184,7 @@ async fn main() {
                             sha: first_value.sha.clone().or(std::env::var("CI_COMMIT_SHA").ok()).unwrap(),
                             instrumentCwd: first_value.instrumentCwd.clone(),
                             dsn: dsn.clone().or(first_value.dsn.clone()).or(std::env::var("DSN").ok()),
-                            reporter: first_value.reporter.clone().or(std::env::var("REPORTER").ok()).or(Option::from(defaultde.to_string())),
+                            reporter: first_value.reporter.clone().or(std::env::var("REPORTER").ok()).or(Option::from(default_report.to_string())),
                             branch: first_value.branch.clone().or(std::env::var("CI_COMMIT_BRANCH").ok()),
                             compareTarget: first_value.compareTarget.clone(),
                             // projectID是拼接一个auto和provider、projectID
