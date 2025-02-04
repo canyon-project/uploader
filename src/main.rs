@@ -149,7 +149,7 @@ async fn main() {
                     let entry = entry.ok()?;
                     let path = entry.path();
                     let file_name = path.file_name()?.to_str()?;
-                    if file_name.starts_with("coverage-final-") && file_name.ends_with(".json") {
+                    if file_name.starts_with("coverage-final") && file_name.ends_with(".json") {
                         Some(path)
                     } else {
                         None
