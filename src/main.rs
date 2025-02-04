@@ -104,12 +104,12 @@ async fn main() {
 
     match args.command {
         Some(Commands::Version) => {
-            println!("canyon-uploader 版本 1.2.7");
+            println!("canyon-uploader 版本 1.2.8");
         }
         Some(Commands::Map { coverage_dir,dsn,provider }) => {
 
 
-            let version = "1.2.7";
+            let version = "1.2.8";
             let result = generate_header(version);
 
             log("info", &result);
