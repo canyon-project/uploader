@@ -25,7 +25,16 @@ enum Commands {
     Map {
         /// 指定要扫描的目录路径
         #[arg(short, long)]
-        path: Option<PathBuf>,
+        coverage_dir: Option<PathBuf>,
+        /// 指定项目ID
+
+        /// 指定上报DSN地址
+        #[arg(short, long)]
+        dsn: Option<String>,
+
+        /// 指定上报者标识
+        #[arg(short, long)]
+        provider: Option<String>,
     },
 }
 
@@ -36,10 +45,15 @@ struct CoverageData {
     projectID: String,
     sha: String,
 //     这里也要写全了！！！
+    #[serde(skip_serializing_if = "Option::is_none")]
     compareTarget: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     instrumentCwd: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     branch: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     dsn: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     reporter: Option<String>,
 }
 
@@ -52,15 +66,15 @@ struct FileCoverage {
     s: Value,
     f: Value,
     b: Value,
-    projectID: String,
-    sha: String,
+    projectID: Option<String>,
+    sha: Option<String>,
     // istanbul可选字段
     branchMap: Option<Value>,
     fnMap: Option<Value>,
     statementMap: Option<Value>,
     inputSourceMap: Option<Value>,
     // 可选字段
-    provider: String,
+    provider: Option<String>,
     instrumentCwd: Option<String>,
     branch: Option<String>,
     dsn: Option<String>,
@@ -79,9 +93,9 @@ async fn main() {
         Some(Commands::Version) => {
             println!("canyon-uploader 版本 1.0.0");
         }
-        Some(Commands::Map { path }) => {
+        Some(Commands::Map { coverage_dir,dsn,provider }) => {
             // 外部传入path
-            let path = path.unwrap_or_else(|| std::env::current_dir().unwrap());
+            let path = coverage_dir.unwrap_or_else(|| std::env::current_dir().unwrap());
             let public_dir = path.join(".canyon_output");
 
             // 检查目录是否存在
@@ -132,14 +146,15 @@ async fn main() {
                         let coverage = serde_json::to_value(data.clone()).unwrap();
                         let data = CoverageData {
                             coverage,
-                            sha: first_value.sha.clone(),
+                            sha: first_value.sha.clone().or(std::env::var("CI_COMMIT_SHA").ok()).unwrap(),
                             instrumentCwd: first_value.instrumentCwd.clone(),
-                            dsn: first_value.dsn.clone(),
-                            reporter: first_value.reporter.clone(),
-                            branch: first_value.branch.clone(),
+                            dsn: dsn.clone().or(first_value.dsn.clone()).or(std::env::var("DSN").ok()),
+                            reporter: first_value.reporter.clone().or(std::env::var("REPORTER").ok()),
+                            branch: first_value.branch.clone().or(std::env::var("CI_COMMIT_BRANCH").ok()),
                             compareTarget: first_value.compareTarget.clone(),
                             // projectID是拼接一个auto和provider、projectID
-                            projectID: format!("{}-{}-auto", first_value.provider, first_value.projectID),
+                            projectID: format!("{}-{}-auto", provider.clone().or(first_value.provider.clone()).unwrap(),
+                                               first_value.projectID.clone().or(std::env::var("CI_PROJECT_ID").ok()).unwrap()),
                         };
 
                         if let Some(existing_data) = map.get(&data.projectID) {
@@ -164,7 +179,7 @@ async fn main() {
             }
 
             // 打印map
-            log("info", &format!("Merged map: {:?}", map));
+            // log("info", &format!("Merged map: {:?}", map));
             for value in map.values() {
                 if let Err(e) = upload_coverage_data(value).await {
                     log("error", &format!("Error uploading coverage data: {}", e));
@@ -191,8 +206,20 @@ async fn upload_coverage_data(data: &CoverageData) -> Result<(), Box<dyn std::er
     //     .send()
     //     .await?;
 
-    log("info", &format!("Uploading data: {:?}", data));
+    // log("info", &format!("Uploading data: {:?}", data));
     // let response_json: serde_json::Value = response.json().await?;
+
+    // 打印 dsn、reporter、projectID、sha、branch、compareTarget、instrumentCwd
+    log("info", &format!("dsn: {:?}", data.dsn));
+    log("info", &format!("reporter: {:?}", data.reporter));
+    log("info", &format!("projectID: {:?}", data.projectID));
+    log("info", &format!("sha: {:?}", data.sha));
+    log("info", &format!("branch: {:?}", data.branch));
+    log("info", &format!("compareTarget: {:?}", data.compareTarget));
+    log("info", &format!("instrumentCwd: {:?}", data.instrumentCwd));
+
+
+
     log("info", &"Upload successful!".to_string());
     Ok(())
 }
