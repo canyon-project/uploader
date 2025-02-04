@@ -7,7 +7,20 @@ use std::path::{Path, PathBuf};
 use std::time::SystemTime;
 use chrono;
 use serde_json::Value;
+use log::log;
 use uploader::merge::{merge_coverage_map};
+
+fn generate_header(version: &str) -> String {
+    let header = r#"
+     _____          _
+    / ____|        | |
+   | |     ___   __| | ___  ___ _____   __
+   | |    / _ \ / _` |/ _ \/ __/ _ \ \ / /
+   | |___| (_) | (_| |  __/ (_| (_) \ V /
+    \_____\___/ \__,_|\___|\___\___/ \_/
+"#;
+    format!("{}\n  Codecov report uploader {}", header, version)
+}
 
 #[derive(Parser)]
 #[command(name = "canyon-uploader")]
@@ -91,9 +104,20 @@ async fn main() {
 
     match args.command {
         Some(Commands::Version) => {
-            println!("canyon-uploader 版本 1.0.0");
+            println!("canyon-uploader 版本 1.2.3");
         }
         Some(Commands::Map { coverage_dir,dsn,provider }) => {
+
+
+            let version = "1.2.3";
+            let result = generate_header(version);
+
+            log("info", &result);
+
+            // Project root located at:
+
+            log("info", &format!("Project root located at: {:?}", std::env::current_dir().unwrap()));
+
             // 外部传入path
             let path = coverage_dir.unwrap_or_else(|| std::env::current_dir().unwrap());
             let public_dir = path.join(".canyon_output");
@@ -198,16 +222,16 @@ async fn upload_coverage_data(data: &CoverageData) -> Result<(), Box<dyn std::er
     // 把请求体积写到本地
     fs::write("request_body.json", serde_json::to_string_pretty(data).unwrap()).unwrap();
 
-    // let response = client
-    //     .post(&data.dsn)
-    //     .json(data)
-    //     .header("Authorization", format!("Bearer {}", data.reporter))
-    //     .header("Content-Type", "application/json")
-    //     .send()
-    //     .await?;
+    let response = client
+        .post(&data.dsn.clone().unwrap())
+        .json(data)
+        .header("Authorization", format!("Bearer {:?}", data.reporter))
+        .header("Content-Type", "application/json")
+        .send()
+        .await?;
 
-    // log("info", &format!("Uploading data: {:?}", data));
-    // let response_json: serde_json::Value = response.json().await?;
+    log("info", &format!("Uploading data: {:?}", data));
+    let response_json: serde_json::Value = response.json().await?;
 
     // 打印 dsn、reporter、projectID、sha、branch、compareTarget、instrumentCwd
     log("info", &format!("dsn: {:?}", data.dsn));
