@@ -182,7 +182,7 @@ async fn main() {
                         let data = CoverageData {
                             coverage,
                             sha: first_value.sha.clone().or(std::env::var("CI_COMMIT_SHA").ok()).unwrap(),
-                            instrumentCwd: first_value.instrumentCwd.clone(),
+                            instrumentCwd: first_value.instrumentCwd.clone().or(std::env::current_dir().ok().and_then(|p| p.to_str().map(|s| s.to_string()))),
                             dsn: dsn.clone().or(first_value.dsn.clone()).or(std::env::var("DSN").ok()),
                             reporter: first_value.reporter.clone().or(std::env::var("REPORTER").ok()).or(Option::from(default_report.to_string())),
                             branch: first_value.branch.clone().or(std::env::var("CI_COMMIT_BRANCH").ok()),
