@@ -31,34 +31,37 @@ enum Commands {
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 struct CoverageData {
-    dsn: String,
-    reporter: String,
     coverage: Value,
+    // 必有字段
     projectID: String,
-    commitSha: String,
-    instrumentCwd: String,
+    sha: String,
 //     这里也要写全了！！！
-    branch: Option<String>,
     compareTarget: Option<String>,
+    instrumentCwd: Option<String>,
+    branch: Option<String>,
+    dsn: Option<String>,
+    reporter: Option<String>,
 }
 
 // 表示单个文件的覆盖率信息
 // 这里要写全了！！！
 #[derive(Serialize, Deserialize, Debug, Clone)]
 struct FileCoverage {
+    // 必有字段
     path: String,
     s: Value,
     f: Value,
     b: Value,
+    projectID: String,
+    sha: String,
+    // istanbul可选字段
     branchMap: Option<Value>,
     fnMap: Option<Value>,
     statementMap: Option<Value>,
     inputSourceMap: Option<Value>,
-    provider: Option<Value>,
-    instrumentCwd: String,
-    version: Option<Value>,
-    projectID: String,
-    sha: String,
+    // 可选字段
+    provider: String,
+    instrumentCwd: Option<String>,
     branch: Option<String>,
     dsn: Option<String>,
     reporter: Option<String>,
@@ -129,13 +132,14 @@ async fn main() {
                         let coverage = serde_json::to_value(data.clone()).unwrap();
                         let data = CoverageData {
                             coverage,
-                            projectID: first_value.projectID.clone(),
-                            commitSha: first_value.sha.clone(),
+                            sha: first_value.sha.clone(),
                             instrumentCwd: first_value.instrumentCwd.clone(),
-                            dsn: first_value.dsn.clone().unwrap_or_else(|| "".to_string()),
-                            reporter: first_value.reporter.clone().unwrap_or_else(|| "".to_string()),
+                            dsn: first_value.dsn.clone(),
+                            reporter: first_value.reporter.clone(),
                             branch: first_value.branch.clone(),
                             compareTarget: first_value.compareTarget.clone(),
+                            // projectID是拼接一个auto和provider、projectID
+                            projectID: format!("{}-{}-auto", first_value.provider, first_value.projectID),
                         };
 
                         if let Some(existing_data) = map.get(&data.projectID) {
