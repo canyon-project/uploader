@@ -12,14 +12,14 @@ use uploader::merge::{merge_coverage_map};
 
 fn generate_header(version: &str) -> String {
     let header = r#"
-     _____          _
-    / ____|        | |
-   | |     ___   __| | ___  ___ _____   __
-   | |    / _ \ / _` |/ _ \/ __/ _ \ \ / /
-   | |___| (_) | (_| |  __/ (_| (_) \ V /
-    \_____\___/ \__,_|\___|\___\___/ \_/
+   ____
+  / ___|__ _ _ __  _   _  ___  _ __
+ | |   / _` | '_ \| | | |/ _ \| '_ \
+ | |__| (_| | | | | |_| | (_) | | | |
+  \____\__,_|_| |_|\__, |\___/|_| |_|
+                   |___/
 "#;
-    format!("{}\n  Codecov report uploader {}", header, version)
+    format!("{}\n  Canyon report uploader {}", header, version)
 }
 
 #[derive(Parser)]
@@ -106,12 +106,12 @@ async fn main() {
 
     match args.command {
         Some(Commands::Version) => {
-            println!("canyon-uploader 版本 1.2.8");
+            println!("canyon-uploader 版本 1.2.9");
         }
         Some(Commands::Map { coverage_dir,dsn,provider }) => {
 
 
-            let version = "1.2.8";
+            let version = "1.2.9";
             let result = generate_header(version);
 
             log("info", &result);
