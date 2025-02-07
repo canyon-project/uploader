@@ -48,6 +48,10 @@ enum Commands {
         /// 指定上报者标识
         #[arg(short, long)]
         provider: Option<String>,
+
+        /// 指定report_id
+        #[arg(short, long)]
+        report_id: Option<String>,
     },
 }
 
@@ -68,6 +72,8 @@ struct CoverageData {
     dsn: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     reporter: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    reportID: Option<String>,
 }
 
 // 表示单个文件的覆盖率信息
@@ -106,12 +112,12 @@ async fn main() {
 
     match args.command {
         Some(Commands::Version) => {
-            println!("canyon-uploader 版本 1.2.9");
+            println!("canyon-uploader 版本 1.2.10");
         }
-        Some(Commands::Map { coverage_dir,dsn,provider }) => {
+        Some(Commands::Map { coverage_dir,dsn,provider,report_id }) => {
 
 
-            let version = "1.2.9";
+            let version = "1.2.10";
             let result = generate_header(version);
 
             log("info", &result);
@@ -190,6 +196,7 @@ async fn main() {
                             // projectID是拼接一个auto和provider、projectID
                             projectID: format!("{}-{}-auto", provider.clone().or(first_value.provider.clone()).unwrap(),
                                                first_value.projectID.clone().or(std::env::var("CI_PROJECT_ID").ok()).unwrap()),
+                            reportID: report_id.clone(),
                         };
 
                         if let Some(existing_data) = map.get(&data.projectID) {
@@ -238,7 +245,7 @@ async fn upload_coverage_data(data: &CoverageData) -> Result<(), Box<dyn std::er
     log("info", &format!("branch: {:?}", data.branch));
     log("info", &format!("compareTarget: {:?}", data.compareTarget));
     log("info", &format!("instrumentCwd: {:?}", data.instrumentCwd));
-
+    log("info", &format!("reportID: {:?}", data.reportID));
 
     // 把请求体积写到本地
     // fs::write("request_body.json", serde_json::to_string_pretty(data).unwrap()).unwrap();
